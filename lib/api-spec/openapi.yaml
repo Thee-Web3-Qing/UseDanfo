@@ -1,0 +1,1214 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: UseDanfo API — Lagos public transport route crowdsourcing
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: areas
+    description: Lagos areas
+  - name: routes
+    description: Transport routes
+  - name: stats
+    description: Platform stats and user summaries
+  - name: badges
+    description: Badges
+  - name: trips
+    description: GPS trip recording
+  - name: ai
+    description: DanfoGPT AI assistant
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log into an existing account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /profile:
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  /onboarding:
+    post:
+      operationId: submitOnboarding
+      tags: [auth]
+      summary: Save onboarding survey answers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInput"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /areas:
+    get:
+      operationId: getAreas
+      tags: [areas]
+      summary: List all Lagos areas
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Area"
+
+  /routes:
+    get:
+      operationId: getRoutes
+      tags: [routes]
+      summary: List routes contributed by the current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Route"
+    post:
+      operationId: createRoute
+      tags: [routes]
+      summary: Submit a new route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /routes/{id}:
+    get:
+      operationId: getRoute
+      tags: [routes]
+      summary: Get a single route by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateRoute
+      tags: [routes]
+      summary: Update a route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+    delete:
+      operationId: deleteRoute
+      tags: [routes]
+      summary: Delete a route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get public platform statistics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  /me/dashboard:
+    get:
+      operationId: getDashboard
+      tags: [stats]
+      summary: Get current user dashboard summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /me/wrapped:
+    get:
+      operationId: getWrapped
+      tags: [stats]
+      summary: Get user contribution wrapped summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WrappedSummary"
+
+  /badges:
+    get:
+      operationId: getBadges
+      tags: [badges]
+      summary: List all available badges
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  /me/badges:
+    get:
+      operationId: getMyBadges
+      tags: [badges]
+      summary: Get badges earned by current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBadge"
+
+  /trips:
+    get:
+      operationId: getTrips
+      tags: [trips]
+      summary: List current user's trips
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: startTrip
+      tags: [trips]
+      summary: Start a new GPS trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get a single trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update trip (append GPS points or complete it)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/events:
+    post:
+      operationId: addTripEvent
+      tags: [trips]
+      summary: Add an event to a trip (entered bus, dropped, paid)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripEventInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripEvent"
+
+  /fare-reports:
+    post:
+      operationId: submitFareReport
+      tags: [trips]
+      summary: Submit a quick fare report (no full trip needed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FareReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FareReport"
+    get:
+      operationId: getFareReports
+      tags: [trips]
+      summary: Get fare reports for a route
+      parameters:
+        - name: from_area
+          in: query
+          schema:
+            type: string
+        - name: to_area
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FareReport"
+
+  /routes/map:
+    get:
+      operationId: getRoutesMap
+      tags: [routes]
+      summary: Get all routes with GPS polylines for the map view
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteMapItem"
+
+  /geo/autocomplete:
+    get:
+      operationId: geoAutocomplete
+      tags: [ai]
+      summary: Autocomplete a Lagos location query (60k+ locations)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 8
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoAutocompleteResponse"
+
+  /geo/geocode:
+    post:
+      operationId: geoGeocode
+      tags: [ai]
+      summary: Geocode a Lagos address to lat/lng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [raw_input]
+              properties:
+                raw_input:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoGeocodeResponse"
+
+  /geo/route:
+    post:
+      operationId: geoRoute
+      tags: [ai]
+      summary: Get a road-following route between two Lagos addresses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin_address, dest_address]
+              properties:
+                origin_address:
+                  type: string
+                dest_address:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoRouteResponse"
+
+  /geo/reverse:
+    get:
+      operationId: geoReverse
+      tags: [ai]
+      summary: Reverse geocode a GPS point to a Lagos landmark/address
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius_meters
+          in: query
+          schema:
+            type: integer
+            default: 300
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoReverseResponse"
+
+  /danfogpt:
+    post:
+      operationId: askDanfoGpt
+      tags: [ai]
+      summary: Ask DanfoGPT a route question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DanfoGptInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DanfoGptResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    SignupInput:
+      type: object
+      required: [full_name, email, password]
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [profile]
+      properties:
+        profile:
+          $ref: "#/components/schemas/Profile"
+
+    Profile:
+      type: object
+      required: [id, full_name, email, created_at]
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        email:
+          type: string
+        primary_area:
+          type: ["string", "null"]
+        transport_frequency:
+          type: ["string", "null"]
+        known_route_count:
+          type: ["string", "null"]
+        known_areas:
+          type: ["string", "null"]
+        onboarding_completed:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    ProfileUpdate:
+      type: object
+      properties:
+        full_name:
+          type: string
+        primary_area:
+          type: string
+
+    OnboardingInput:
+      type: object
+      required: [known_areas, transport_frequency, known_route_count]
+      properties:
+        known_areas:
+          type: array
+          items:
+            type: string
+        transport_frequency:
+          type: string
+          enum: [daily, "3-5x_weekly", weekly, monthly, rarely]
+        known_route_count:
+          type: string
+          enum: ["1-3", "4-7", "8-15", "15+"]
+
+    Area:
+      type: object
+      required: [id, name, region]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        region:
+          type: string
+
+    RouteLeg:
+      type: object
+      required: [id, route_id, leg_order, start_area, end_area, fare_range, travel_time_range]
+      properties:
+        id:
+          type: integer
+        route_id:
+          type: integer
+        leg_order:
+          type: integer
+        start_area:
+          type: string
+        end_area:
+          type: string
+        fare_range:
+          type: string
+        travel_time_range:
+          type: string
+
+    RouteLegInput:
+      type: object
+      required: [leg_order, start_area, end_area, fare_range, travel_time_range]
+      properties:
+        leg_order:
+          type: integer
+        start_area:
+          type: string
+        end_area:
+          type: string
+        fare_range:
+          type: string
+        travel_time_range:
+          type: string
+
+    Route:
+      type: object
+      required: [id, contributor_id, start_area_id, end_area_id, buses_required, confidence_level, difficulty_level, created_at, legs]
+      properties:
+        id:
+          type: integer
+        contributor_id:
+          type: integer
+        start_area_id:
+          type: integer
+        end_area_id:
+          type: integer
+        start_area_name:
+          type: ["string", "null"]
+        end_area_name:
+          type: ["string", "null"]
+        buses_required:
+          type: string
+        landmark:
+          type: ["string", "null"]
+        confidence_level:
+          type: string
+        difficulty_level:
+          type: string
+        common_mistake:
+          type: ["string", "null"]
+        created_at:
+          type: string
+          format: date-time
+        legs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteLeg"
+
+    RouteInput:
+      type: object
+      required: [start_area_id, end_area_id, buses_required, confidence_level, difficulty_level, legs]
+      properties:
+        start_area_id:
+          type: integer
+        end_area_id:
+          type: integer
+        buses_required:
+          type: string
+          enum: [one, two, three_or_more]
+        landmark:
+          type: string
+        confidence_level:
+          type: string
+          enum: [expert, very_confident, somewhat_confident, not_sure]
+        difficulty_level:
+          type: string
+          enum: [easy, moderate, difficult, very_difficult]
+        common_mistake:
+          type: string
+        legs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteLegInput"
+
+    RouteUpdate:
+      type: object
+      properties:
+        start_area_id:
+          type: integer
+        end_area_id:
+          type: integer
+        buses_required:
+          type: string
+        landmark:
+          type: string
+        confidence_level:
+          type: string
+        difficulty_level:
+          type: string
+        common_mistake:
+          type: string
+        legs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteLegInput"
+
+    PlatformStats:
+      type: object
+      required: [total_routes, total_contributors, total_areas_covered]
+      properties:
+        total_routes:
+          type: integer
+        total_contributors:
+          type: integer
+        total_areas_covered:
+          type: integer
+
+    DashboardSummary:
+      type: object
+      required: [profile, routes_count, contribution_score, badges_count, recent_routes]
+      properties:
+        profile:
+          $ref: "#/components/schemas/Profile"
+        routes_count:
+          type: integer
+        contribution_score:
+          type: integer
+        badges_count:
+          type: integer
+        recent_routes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Route"
+
+    WrappedSummary:
+      type: object
+      required: [routes_contributed, areas_covered, most_familiar_area, contributor_level, badges, top_corridor]
+      properties:
+        routes_contributed:
+          type: integer
+        areas_covered:
+          type: integer
+        most_familiar_area:
+          type: ["string", "null"]
+        contributor_level:
+          type: string
+        top_corridor:
+          type: ["string", "null"]
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+
+    Badge:
+      type: object
+      required: [id, name, description, icon]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+
+    UserBadge:
+      type: object
+      required: [id, user_id, badge_id, earned_at, badge]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        badge_id:
+          type: integer
+        earned_at:
+          type: string
+          format: date-time
+        badge:
+          $ref: "#/components/schemas/Badge"
+
+    GpsPoint:
+      type: object
+      required: [lat, lng, ts]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        ts:
+          type: integer
+          description: Unix timestamp ms
+
+    TripInput:
+      type: object
+      required: [from_area, to_area]
+      properties:
+        from_area:
+          type: string
+        to_area:
+          type: string
+        initial_gps:
+          $ref: "#/components/schemas/GpsPoint"
+
+    TripUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, completed, abandoned]
+        gps_points:
+          type: array
+          items:
+            $ref: "#/components/schemas/GpsPoint"
+        to_area:
+          type: string
+
+    TripEventInput:
+      type: object
+      required: [event_type]
+      properties:
+        event_type:
+          type: string
+          enum: [entered_bus, dropped, paid]
+        area_name:
+          type: ["string", "null"]
+        amount:
+          type: ["integer", "null"]
+        gps_point:
+          $ref: "#/components/schemas/GpsPoint"
+
+    TripEvent:
+      type: object
+      required: [id, trip_id, event_type, created_at]
+      properties:
+        id:
+          type: integer
+        trip_id:
+          type: integer
+        event_type:
+          type: string
+        area_name:
+          type: ["string", "null"]
+        amount:
+          type: ["integer", "null"]
+        gps_point:
+          type: ["object", "null"]
+        created_at:
+          type: string
+          format: date-time
+
+    Trip:
+      type: object
+      required: [id, user_id, from_area, status, created_at]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        from_area:
+          type: string
+        to_area:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, completed, abandoned]
+        gps_trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/GpsPoint"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/TripEvent"
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: ["string", "null"]
+          format: date-time
+
+    FareReportInput:
+      type: object
+      required: [from_area, to_area, amount]
+      properties:
+        from_area:
+          type: string
+        to_area:
+          type: string
+        amount:
+          type: integer
+        trip_id:
+          type: ["integer", "null"]
+
+    FareReport:
+      type: object
+      required: [id, from_area, to_area, amount, created_at]
+      properties:
+        id:
+          type: integer
+        from_area:
+          type: string
+        to_area:
+          type: string
+        amount:
+          type: integer
+        trip_id:
+          type: ["integer", "null"]
+        created_at:
+          type: string
+          format: date-time
+
+    RouteMapItem:
+      type: object
+      required: [id, start_area_name, end_area_name, buses_required, legs]
+      properties:
+        id:
+          type: integer
+        start_area_name:
+          type: string
+        end_area_name:
+          type: string
+        buses_required:
+          type: string
+        confidence_level:
+          type: string
+        difficulty_level:
+          type: string
+        avg_fare:
+          type: ["integer", "null"]
+        legs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteLeg"
+
+    GeoAutocompleteResult:
+      type: object
+      required: [landmark_name, suggestion, lat, lng, city]
+      properties:
+        landmark_id:
+          type: string
+        landmark_name:
+          type: string
+        suggestion:
+          type: string
+        category:
+          type: string
+        city:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        match_type:
+          type: string
+        score:
+          type: number
+
+    GeoAutocompleteResponse:
+      type: object
+      required: [results, query, city]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeoAutocompleteResult"
+        query:
+          type: string
+        city:
+          type: string
+        cached:
+          type: boolean
+        response_ms:
+          type: integer
+
+    GeoGeocodeResponse:
+      type: object
+      required: [lat, lng, confidence]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        confidence:
+          type: number
+        matched_landmark:
+          type: ["string", "null"]
+        source:
+          type: string
+        response_ms:
+          type: integer
+
+    GeoRouteResponse:
+      type: object
+      required: [distance_km, duration_min, origin_lat, origin_lng, dest_lat, dest_lng]
+      properties:
+        distance_km:
+          type: number
+        duration_min:
+          type: number
+        polyline:
+          type: ["string", "null"]
+        warnings:
+          type: array
+          items:
+            type: string
+        origin_lat:
+          type: number
+        origin_lng:
+          type: number
+        dest_lat:
+          type: number
+        dest_lng:
+          type: number
+
+    GeoReverseResponse:
+      type: object
+      required: [primary_address, city]
+      properties:
+        primary_address:
+          type: string
+        neighborhood:
+          type: string
+        city:
+          type: string
+        nearest_landmark:
+          type: string
+        nearest_landmark_category:
+          type: string
+        distance_to_landmark_meters:
+          type: number
+
+    DanfoGptInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        conversation_history:
+          type: array
+          items:
+            type: object
+            required: [role, content]
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+
+    DanfoGptResponse:
+      type: object
+      required: [reply, route_found]
+      properties:
+        reply:
+          type: string
+        route_found:
+          type: boolean
+        route:
+          type: ["object", "null"]
+        suggestions:
+          type: array
+          items:
+            type: string

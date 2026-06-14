@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/danfogpt/"
+title = "DanfoGPT"
+version = "1.0.0"
+id = "artifacts/danfogpt"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/danfogpt/" ]
+localPort = 23778
+
+[services.development]
+run = "pnpm --filter @workspace/danfogpt run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/danfogpt", "run", "build" ]
+publicDir = "artifacts/danfogpt/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23778"
+BASE_PATH = "/danfogpt/"

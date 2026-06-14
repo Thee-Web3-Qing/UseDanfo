@@ -1,0 +1,74 @@
+[
+  {
+    "id": "a1b2c3d4-0001-4000-8000-000000000001",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1Title.tsx",
+    "title": "UseDanfo — Ó wà",
+    "description": "Title slide introducing UseDanfo",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0002-4000-8000-000000000002",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2Problem.tsx",
+    "title": "Lagos Without a Map",
+    "description": "The problem: 14M commuters, no official routes",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0003-4000-8000-000000000003",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3HowItWorks.tsx",
+    "title": "How It Works",
+    "description": "Three steps: Contribute, Validate, Use",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0004-4000-8000-000000000004",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4Map.tsx",
+    "title": "Community Map",
+    "description": "Interactive Lagos map built from community data",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0005-4000-8000-000000000005",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5DanfoGPT.tsx",
+    "title": "DanfoGPT",
+    "description": "AI routing assistant with Lagos voice",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0006-4000-8000-000000000006",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6Growth.tsx",
+    "title": "Built to Grow",
+    "description": "Badges, Wrapped, Leaderboards",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7TechStack.tsx",
+    "title": "Tech Stack",
+    "description": "React, Express, PostgreSQL, GeoAPI, Qwen AI",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0008-4000-8000-000000000008",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8Vision.tsx",
+    "title": "What Gets Built",
+    "description": "The living transport brain for Lagos",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-0009-4000-8000-000000000009",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide9Closing.tsx",
+    "title": "usedanfo.com",
+    "description": "Closing slide: Know a route? Share it.",
+    "speakerNotes": ""
+  }
+]

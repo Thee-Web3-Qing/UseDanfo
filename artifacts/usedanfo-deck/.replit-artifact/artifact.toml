@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/usedanfo-deck/"
+title = "UseDanfo Deck"
+version = "1.0.0"
+id = "artifacts/usedanfo-deck"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/usedanfo-deck/" ]
+localPort = 23518
+
+[services.development]
+run = "pnpm --filter @workspace/usedanfo-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/usedanfo-deck", "run", "build" ]
+publicDir = "artifacts/usedanfo-deck/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23518"
+BASE_PATH = "/usedanfo-deck/"
