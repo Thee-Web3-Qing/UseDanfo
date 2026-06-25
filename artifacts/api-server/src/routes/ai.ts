@@ -1,16 +1,21 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, routesTable, routeLegsTable, areasTable } from "@workspace/db";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const LAGOS_ROUTE_KNOWLEDGE = `You are DanfoGPT, a Lagos danfo route expert who speaks naturally and helpfully.
-You help people find danfo routes in Lagos, Nigeria.
-You know Lagos well — areas like Yaba, Surulere, Mushin, Oshodi, Ikeja, Lekki, Victoria Island, CMS, Obalende, etc.
-You speak in a friendly mix of English and occasional Lagos slang (e.g. "oga", "wahala", "abi", "sha").
-Keep responses concise and practical. Always mention key landmarks, fares where known, and transfer points.
-If you don't know a route, say so honestly and suggest the user contribute it.
-Format directions as numbered steps.`;
+const LAGOS_ROUTE_KNOWLEDGE = `You are DanfoGPT — a sharp Lagos danfo guide wey know every route, junction, and conductor trick for Lagos.
+
+HOW YOU TALK:
+- You speak natural Lagos pidgin mixed with plain English. Not too heavy, not too refined — like a smart friend wey dey explain things to you.
+- Use words like: "oga", "sha", "abeg", "wahala", "abi", "na", "dey", "sabi", "oya", "just enter", "drop for", "tell conductor", "no dulling"
+- Never sound like a customer service bot. Sound like someone wey actually take danfo everyday.
+- Keep it short and direct. No long grammar. If the route get wahala (traffic, connection), mention am.
+- Always give fares and rough time estimates where you know am.
+- Format directions as numbered steps — clear and simple.
+- If you no know a route, be honest. Tell them to head to the nearest big junction and ask, or contribute the route on the app.
+- Never say "certainly", "absolutely", "of course", "I'd be happy to" — that kind talk no be danfo energy.`;
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -76,7 +81,7 @@ function buildSimulatedResponse(
   if (lower.includes("hello") || lower.includes("hi") || lower.match(/^hey/)) {
     return {
       reply:
-        "Ẹ káàbọ̀! Welcome to DanfoGPT — your Lagos danfo guide. Where you dey go? Tell me your starting point and destination and I go direct you sharp sharp.",
+        "Oya welcome! I be DanfoGPT — your Lagos danfo guy. Where you wan go? Drop your starting point and destination, I go sort you out sharp sharp.",
       route_found: false,
       suggestions: ["Yaba to Victoria Island", "Ikeja to Lekki", "Surulere to CMS", "Oshodi to Ajah"],
     };
@@ -85,7 +90,7 @@ function buildSimulatedResponse(
   if (lower.includes("contribute") || lower.includes("add route") || lower.includes("add a route")) {
     return {
       reply:
-        "To contribute a route, go to the Contribute page from your dashboard. Enter your start area, end area, number of buses, and details for each leg. Every contribution earns you badges and helps the whole Lagos community!",
+        "You wan add route? Oya — go your dashboard, click Contribute. Put your start area, end area, how many buses e go take, and the details for each leg. We go add am to the map and you go collect badge. The community go thank you sha.",
       route_found: false,
       suggestions: ["Yaba to Victoria Island", "Ikeja to Lekki"],
     };
@@ -94,7 +99,7 @@ function buildSimulatedResponse(
   if (lower.includes("fare") || lower.includes("cost") || lower.includes("how much")) {
     return {
       reply:
-        "Lagos danfo fares dey change o — depends on distance and conductor mood! Generally:\n\n1. Short trips (under 20 mins): ₦200–₦300\n2. Medium trips (20–45 mins): ₦300–₦500\n3. Long trips (1hr+): ₦500–₦1000+\n\nIf you just completed a trip, submit a fare report and we go update our data. Which route you wan check?",
+        "Fares dey change o — conductor and traffic get their own mind. But rough rough:\n\n1. Short trip (under 20 mins): ₦200–₦300\n2. Medium trip (20–45 mins): ₦300–₦500\n3. Long trip (1hr+): ₦500–₦1000+\n\nIf you just finish a trip, submit fare report — e go help the next person. Which route you dey check?",
       route_found: false,
       suggestions: ["Yaba to CMS fare", "Oshodi to Ajah fare", "Ikeja to Lekki fare"],
     };
@@ -107,66 +112,66 @@ function buildSimulatedResponse(
     const knownRoutes: Record<string, { steps: string[]; fare: string; time: string }> = {
       "yaba-victoria island": {
         steps: [
-          "Board any danfo at Yaba bus stop heading to CMS",
-          "Drop at CMS or Obalende junction",
-          "Take another danfo or BRT heading to Victoria Island",
-          "Drop at your stop on VI",
+          "Enter danfo for Yaba bus stop — tell conductor CMS",
+          "Drop for Obalende junction (not CMS — Obalende dey closer to VI)",
+          "Cross over, enter VI-bound danfo or BRT",
+          "Tell conductor your exact stop for VI",
         ],
         fare: "₦300–₦500 total",
-        time: "45–90 minutes depending on traffic",
+        time: "45–90 mins — depends on Third Mainland wahala",
       },
       "yaba-vi": {
         steps: [
-          "Board any danfo at Yaba heading to CMS",
-          "Drop at CMS or Obalende junction",
-          "Take another danfo or BRT to Victoria Island",
+          "Enter danfo for Yaba — tell conductor CMS or Obalende",
+          "Drop for Obalende junction",
+          "Enter another danfo or BRT going to Victoria Island",
         ],
         fare: "₦300–₦500 total",
-        time: "45–90 minutes",
+        time: "45–90 mins",
       },
       "ikeja-lekki": {
         steps: [
-          "From Ikeja, board danfo to Oshodi (very frequent)",
-          "From Oshodi, take bus to CMS/Obalende",
-          "From Obalende, take Lekki/Ajah danfo",
-          "Tell conductor 'Lekki Phase 1'",
+          "Enter danfo from Ikeja to Oshodi — buses dey always",
+          "From Oshodi, enter bus going CMS or Obalende",
+          "From Obalende, enter Lekki/Ajah danfo",
+          "Tell conductor 'Lekki Phase 1' so e know where to drop you",
         ],
         fare: "₦500–₦800 total",
-        time: "1.5–3 hours (this route get wahala for traffic o)",
+        time: "1.5–3 hours — this route get serious traffic, especially afternoon",
       },
       "surulere-cms": {
         steps: [
-          "From Surulere, board danfo to Ojuelegba",
-          "At Ojuelegba, connect to CMS-bound danfo",
-          "Drop at CMS",
+          "Enter danfo from Surulere going Ojuelegba",
+          "Drop for Ojuelegba, enter CMS danfo from there",
+          "Tell conductor CMS, drop when you reach",
         ],
         fare: "₦200–₦350",
-        time: "30–60 minutes",
+        time: "30–60 mins",
       },
       "oshodi-ajah": {
         steps: [
-          "From Oshodi, take BRT or danfo to CMS/Obalende",
-          "From Obalende, board Ajah/Sangotedo danfo",
-          "Tell conductor your stop",
+          "From Oshodi, enter BRT or danfo going CMS/Obalende",
+          "Drop for Obalende, then enter Ajah or Sangotedo danfo",
+          "Tell conductor your stop before you enter — so no overshoot",
         ],
         fare: "₦450–₦700",
-        time: "1.5–2.5 hours",
+        time: "1.5–2.5 hours — island traffic no dey play",
       },
       "yaba-cms": {
         steps: [
-          "Board any danfo at Yaba bus stop heading to CMS",
-          "Direct route — tell conductor CMS",
+          "Enter danfo for Yaba bus stop — just tell conductor CMS",
+          "Direct route, no connection needed",
         ],
         fare: "₦150–₦250",
-        time: "20–40 minutes",
+        time: "20–40 mins",
       },
       "mushin-ikeja": {
         steps: [
-          "From Mushin, board danfo heading to Oshodi",
-          "From Oshodi, take danfo to Ikeja",
+          "Enter danfo from Mushin going Oshodi",
+          "From Oshodi, enter Ikeja danfo — very common route",
         ],
         fare: "₦200–₦350",
-        time: "30–60 minutes",
+        time: "30–60 mins",
       },
     };
 
@@ -179,7 +184,7 @@ function buildSimulatedResponse(
       const fromLabel = from.charAt(0).toUpperCase() + from.slice(1);
       const toLabel = to.charAt(0).toUpperCase() + to.slice(1);
       return {
-        reply: `Oya! Here is how to get from ${fromLabel} to ${toLabel}:\n\n${steps}\n\nFare: ${route.fare}\nTime: ${route.time}\n\nSafe journey sha! This route na community-verified.`,
+        reply: `Oya, ${fromLabel} to ${toLabel}:\n\n${steps}\n\nFare: ${route.fare}\nTime: ${route.time}\n\nSafe journey sha!`,
         route_found: true,
         suggestions: [],
       };
@@ -187,7 +192,7 @@ function buildSimulatedResponse(
 
     if (routeContext && routeContext !== "No routes have been contributed yet." && routeContext !== "Route data unavailable.") {
       return {
-        reply: `Let me check our community database for ${from} to ${to}...\n\nHere is what I found from contributors:\n\n${routeContext.slice(0, 500)}\n\nIf this no match exactly, try verifying the route yourself and contribute it — you go earn badges!`,
+        reply: `Lemme check what the community get for ${from} to ${to}...\n\n${routeContext.slice(0, 500)}\n\nIf e no match exactly, abeg verify am and contribute the correct one — you go earn badge and help others.`,
         route_found: true,
         suggestions: [],
       };
@@ -196,7 +201,7 @@ function buildSimulatedResponse(
     const fromLabel = from.charAt(0).toUpperCase() + from.slice(1);
     const toLabel = to.charAt(0).toUpperCase() + to.slice(1);
     return {
-      reply: `I no get a confirmed route from ${fromLabel} to ${toLabel} in my database yet.\n\nGeneral advice: head to the nearest major junction (Oshodi, CMS, or Ojuelegba) and connect from there. Ask locals at the bus stop — they go point you right.\n\nIf you know this route, abeg contribute it on the Contribute page — you go help many Lagosians and earn a badge!`,
+      reply: `${fromLabel} to ${toLabel} — I no get that one confirmed yet.\n\nBest bet: head to the nearest big junction — Oshodi, CMS, or Ojuelegba. From there you go find connecting buses. Ask at the bus stop, Lagosians dey always know.\n\nIf you sabi this route yourself, abeg contribute am — you go earn badge and help the next person.`,
       route_found: false,
       suggestions: ["How do I contribute a route?", "What areas do you cover?"],
     };
@@ -205,7 +210,7 @@ function buildSimulatedResponse(
   if (lower.includes("what areas") || lower.includes("which areas") || lower.includes("areas do you")) {
     return {
       reply:
-        "We cover all major Lagos areas including: Yaba, Surulere, Mushin, Oshodi, Ikeja, Maryland, Ketu, Ojota, Berger, Agege, Iyana Ipaja, Abule Egba, Ikotun, Egbeda, Akowonjo, Festac, Mile 2, Gbagada, CMS, Marina, Obalende, Victoria Island, Ikoyi, Lekki, Ajah, Sangotedo, Ikorodu, Apapa, Ebute Metta, and many more.\n\nOur community is growing — contribute a route and it will appear on our map!",
+        "We cover plenty Lagos areas: Yaba, Surulere, Mushin, Oshodi, Ikeja, Maryland, Ketu, Ojota, Berger, Agege, Iyana Ipaja, Abule Egba, Ikotun, Egbeda, Festac, Mile 2, Gbagada, CMS, Obalende, Victoria Island, Ikoyi, Lekki, Ajah, Sangotedo, Ikorodu, Apapa, Ebute Metta, and more.\n\nWe still dey grow — contribute a route and e go show on the map straight.",
       route_found: false,
       suggestions: ["Yaba to Victoria Island", "Ikeja to Lekki"],
     };
@@ -213,7 +218,7 @@ function buildSimulatedResponse(
 
   return {
     reply:
-      "I dey hear you! Tell me which area you dey and where you wan go — I go find the best danfo route for you.\n\nExample: 'How do I get from Yaba to Victoria Island?'",
+      "Tell me where you dey and where you wan reach — I go find the danfo route for you.\n\nExample: 'How do I get from Yaba to Victoria Island?'",
     route_found: false,
     suggestions: ["Yaba to Victoria Island", "Ikeja to Lekki", "Surulere to CMS", "Oshodi to Ajah"],
   };
@@ -231,15 +236,15 @@ router.post("/danfogpt", async (req, res): Promise<void> => {
   }
 
   const routeContext = await getRoutesContext();
-  const QWEN_API_KEY = process.env.QWEN_API_KEY;
+  const QWEN_API_KEY = process.env.QWEN_API_KEY_DANFO;
   const QWEN_BASE_URL =
-    process.env.QWEN_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
+    process.env.QWEN_BASE_URL || "https://ws-kslei9o3pxdkd1zd.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1";
 
   if (QWEN_API_KEY) {
     try {
-      const messages: Message[] = [
+      const messages = [
         {
-          role: "user" as const,
+          role: "system" as const,
           content: `${LAGOS_ROUTE_KNOWLEDGE}\n\nKnown community routes:\n${routeContext}`,
         },
         ...conversation_history,
@@ -271,8 +276,12 @@ router.post("/danfogpt", async (req, res): Promise<void> => {
           suggestions: [],
         });
         return;
+      } else {
+        const errText = await response.text();
+        logger.warn({ status: response.status, body: errText }, "Qwen API error — falling back to simulated");
       }
-    } catch {
+    } catch (err) {
+      logger.warn({ err }, "Qwen fetch failed — falling back to simulated");
     }
   }
 

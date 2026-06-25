@@ -62,6 +62,7 @@ export default function Onboarding() {
 
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => Math.max(1, s - 1));
+  const handleSkip = () => setLocation("/dashboard");
 
   const handleSubmit = () => {
     if (!frequency || !routeCount || knownAreas.length === 0) return;
@@ -103,7 +104,9 @@ export default function Onboarding() {
           <span className="font-['Syne'] font-bold uppercase tracking-widest text-[#888888] text-xs">Step {step} of 3</span>
         </div>
         
-        <div className="w-[48px]" />
+        <button onClick={handleSkip} className="font-['Syne'] text-[#888888] hover:text-white text-xs uppercase font-bold tracking-widest transition-colors">
+          SKIP
+        </button>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full relative overflow-hidden">
@@ -192,7 +195,7 @@ export default function Onboarding() {
               exit={{ opacity: 0, x: -20 }}
               className="w-full space-y-12 flex flex-col items-center text-center"
             >
-              <h2 className="font-['Dela_Gothic_One'] text-4xl md:text-6xl uppercase tracking-tight leading-none">HOW MANY ROUTES YOU SAB?</h2>
+              <h2 className="font-['Dela_Gothic_One'] text-4xl md:text-6xl uppercase tracking-tight leading-none">HOW MANY ROUTES YOU SABI?</h2>
               
               <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
                 {ROUTE_COUNTS.map((rc) => {

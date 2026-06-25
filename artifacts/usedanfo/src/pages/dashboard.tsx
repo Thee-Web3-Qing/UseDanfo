@@ -20,8 +20,6 @@ export default function Dashboard() {
   React.useEffect(() => {
     if (!isLoadingMe && !me) {
       setLocation("/login");
-    } else if (me && !me.onboarding_completed) {
-      setLocation("/onboarding");
     }
   }, [me, isLoadingMe, setLocation]);
 
